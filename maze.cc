@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -182,6 +183,61 @@ public:
 
 class Maze{
 public:
+    // class Frontier{
+    // public:
+    //     class Node{
+    //     public:
+    //         MazeNode* node;
+    //         Node* next;
+    //         Node* prev;
+    //         Node(MazeNode* n, Node* nxt, Node* previous){
+    //             node = n;
+    //             next = nxt;
+    //             prev = previous;
+    //         }
+    //     };
+    //     Node* head;
+    //     Node* tail;
+    //     int len;
+    //     Frontier(int n){
+    //         head = NULL;
+    //         tail = NULL;
+    //         len = 0;
+    //     }
+    //     void add(MazeNode* insert, int position){
+    //         if(head == NULL){
+    //             head = new Node(insert, NULL, NULL);
+    //             tail = head;
+    //         }
+    //         else{
+    //             tail->next =new Node(insert, NULL, tail);
+    //             tail = tail->next;
+    //         }
+    //         len++;
+    //     }
+    //     MazeNode* pop(int pos){
+    //         if(size() == 0){
+    //             std::cout << "Cannot pop empty" <<std::endl;
+    //             return NULL;
+    //         }
+    //
+    //         MazeNode* out = tail->node;
+    //         tail = tail->prev;
+    //         if(tail==NULL){
+    //             head = NULL;
+    //         }
+    //         else tail->next = NULL;
+    //         len--;
+    //         return out;
+    //     }
+    //     bool empty(){
+    //         return size()<=0;
+    //     }
+    //     int size(){
+    //         return len;
+    //     }
+    // };
+
     class Frontier{
     public:
         class Node{
@@ -189,43 +245,125 @@ public:
             MazeNode* node;
             Node* next;
             Node* prev;
-            Node(MazeNode* n, Node* nxt, Node* previous){
+            Node(MazeNode* n, Node* previous, Node* nxt){
                 node = n;
                 next = nxt;
                 prev = previous;
             }
         };
+        struct FrontierPointer{
+            Node* location;
+            int index;
+            float goalRatio;
+
+            FrontierPointer(){
+                location = NULL;
+            }
+
+            FrontierPointer(Node* loc, int ind, float ratio){
+                location = loc;
+                index = ind;
+                goalRatio = ratio;
+            }
+
+            void update(Node* newLoc, int newInd){
+                location = newLoc;
+                index = newInd;
+            }
+        };
+
         Node* head;
         Node* tail;
+        struct FrontierPointer insertOld;
+        struct FrontierPointer insertNew;
+        struct FrontierPointer popPoint;
         int len;
-        Frontier(int n){
+        //ins and pop are mid point bewtween ranges. (n/2 access whithin range)
+        //Must be between 0 and 1 inclusive.
+        Frontier(int n, float inOld, float inNew, float popLoc){
             head = NULL;
             tail = NULL;
+            insertOld = FrontierPointer(NULL, 0, inOld);
+            insertNew = FrontierPointer(NULL, 0, inNew);
+            popPoint = FrontierPointer(NULL, 0, popLoc);
             len = 0;
         }
         void add(MazeNode* insert, int position){
-            if(head == NULL){
+            if(position<0 || position>size()){
+                return;
+            }
+            if(size()<1){
                 head = new Node(insert, NULL, NULL);
                 tail = head;
+                insertOld.update(head, 0);
+                insertNew.update(head, 0);
+                popPoint.update(head, 0);
+                len++;
+                return;
             }
-            else{
-                tail->next =new Node(insert, NULL, tail);
+            if(position == size()){
+                tail->next = new Node(insert, tail, NULL);
                 tail = tail->next;
             }
+            else if(position == 0){
+                head->prev = new Node(insert, NULL, head);
+                head = head->prev;
+            }
+            else{
+                Node* pos = fastGet(position);
+                Node* add = new Node(insert, pos->prev, pos);
+                pos->prev = add;
+                add->prev->next = add;
+            }
+            addUpdate(&insertOld, position);
+            addUpdate(&insertNew, position);
+            addUpdate(&popPoint, position);
             len++;
         }
-        MazeNode* pop(int pos){
-            if(size() == 0){
-                std::cout << "Cannot pop empty" <<std::endl;
+        MazeNode* pop(int position){
+            if(size()==0 || position>=size() || position<0){
                 return NULL;
             }
-
-            MazeNode* out = tail->node;
-            tail = tail->prev;
-            if(tail==NULL){
+            MazeNode* out;
+            if(size() == 1){
+                out = head->node;
+                delete head;
                 head = NULL;
+                tail = NULL;
+                insertOld.update(NULL, -1);
+                insertNew.update(NULL, -1);
+                popPoint.update(NULL, -1);
+                len--;
+                return out;
             }
-            else tail->next = NULL;
+            if(position == 0){
+                out = head->node;
+                head = head->next;
+                remUpdate(&insertOld, position);
+                remUpdate(&insertNew, position);
+                remUpdate(&popPoint, position);
+                delete head->prev;
+                head->prev = NULL;
+            }
+            else if(position == size()-1){
+                out = tail->node;
+                tail = tail->prev;
+                remUpdate(&insertOld, position);
+                remUpdate(&insertNew, position);
+                remUpdate(&popPoint, position);
+                delete tail->next;
+                tail->next = NULL;
+            }
+            else{
+                Node* pos = fastGet(position);
+                out = pos->node;
+                pos->prev->next = pos->next;
+                pos->next->prev = pos->prev;
+                remUpdate(&insertOld, position);
+                remUpdate(&insertNew, position);
+                remUpdate(&popPoint, position);
+                delete pos;
+            }
             len--;
             return out;
         }
@@ -234,6 +372,74 @@ public:
         }
         int size(){
             return len;
+        }
+        Node* fastGet(int position){
+            Node* slider;
+            int count;
+            int origin;
+            int oldDist = distance(insertOld.index, position);
+            int newDist = distance(insertNew.index, position);
+            if(position <= oldDist && position <= newDist && position <= (size()-position-1)){
+                slider = head;
+                count = position;
+                origin = 0;
+            }
+            else if(oldDist <= position && oldDist <= newDist && oldDist <= size()-position-1){
+                slider = insertOld.location;
+                count = oldDist;
+                origin = insertOld.index;
+            }
+            else if(newDist <= position && newDist <= oldDist && newDist <= size()-position-1){
+                slider = insertNew.location;
+                count = newDist;
+                origin = insertOld.index;
+            }
+            else{
+                slider = tail;
+                count = size()-position-1;
+                origin = size()-1;
+            }
+            for(int i = 0; i<count; i++){
+                if(origin < position) slider = slider->next;
+                else slider = slider->prev;
+            }
+            return slider;
+        }
+        int distance(int a, int b){
+            return std::abs(a-b);
+        }
+        void addUpdate(struct FrontierPointer* point, int position){
+            int goal = ratioToIndex(point->goalRatio, size());
+            if(point->index >= position){
+                if(goal==point->index) point->location = point->location->prev;
+                else point->index++;
+            }
+            else if(goal!=point->index){
+                point->location = point->location->next;
+                point->index++;
+            }
+        }
+
+        void remUpdate(struct FrontierPointer* point, int position){
+            int goal = ratioToIndex(point->goalRatio, size()-2);
+            if(point->index==position){
+                if(goal == position) point->location = point->location->next;
+                else {
+                    point->location = point->location->prev;
+                    point->index--;
+                }
+            }
+            else if(point->index>position){
+                if(goal == point->index) point->location = point->location->next;
+                else point->index--;
+            }
+            else if(goal!=point->index){
+                point->location = point->location->prev;
+                point->index--;
+            }
+        }
+        int ratioToIndex(float ratio, int size){
+            return static_cast<int>(floor(size*ratio));
         }
     };
 
@@ -326,15 +532,15 @@ public:
         fullBoard[j+1] = '\0';
         return fullBoard;
     }
-
+//inOld, float inNew, float popLoc
     void buildMaze(int starts, std::tuple<int,int>* startCells){
         pushLoNew = 0;
-        pushHiNew = 0;
+        pushHiNew = 1;
         pushLoOld = 0;
-        pushHiOld = 0;
-        popHi = 0;
+        pushHiOld = 1;
+        popHi = 1;
         popLo = 0;
-        Frontier* field = new Frontier(length*width);
+        Frontier* field = new Frontier(length*width, (pushHiOld+pushLoOld)/2, (pushHiNew+pushLoNew)/2, (popHi+popLo)/2);
         MazeNode* current;
         Direction wall = None;
         for(int i = 0; i<starts; i++){
@@ -347,10 +553,12 @@ public:
             wall = current->biasedWall();
             if(wall==None){continue;}
             current->bridgeDirection(wall);
-            if(current->numValidWalls())
+            if(current->numValidWalls()){
                 insertFrontier(field, current, pushLoOld, pushHiOld);
-            if(current->neighbor(wall)->numValidWalls())
+            }
+            if(current->neighbor(wall)->numValidWalls()){
                 insertFrontier(field, current->neighbor(wall), pushLoNew, pushHiNew);
+            }
         }
     }
 
@@ -378,9 +586,10 @@ public:
     }
 
     MazeNode* popFrontier(Frontier* f, float outLow, float outHi){
-        int low = ratioToIndex(outLow, f->size());
-        int hi = ratioToIndex(outHi, f->size());
-        return f->pop(((std::rand()%(hi-low+1))+low));
+        int low = ratioToIndex(outLow, f->size()-1);
+        int hi = ratioToIndex(outHi, f->size()-1);
+        MazeNode* placeHold = f->pop(((std::rand()%(hi-low+1))+low));
+        return placeHold;
     }
 
     std::tuple<MazeNode*, MazeNode*> solutionNodes(int solRank){
@@ -397,166 +606,15 @@ public:
 
 //g++ maze.cc -o testMaze;./testMaze
 int main(int argc, const char *argv[]){
+    //use atoi to cast from arg to int
     std::srand(std::time(0));
     Maze* testMaze = new Maze(10,10);
     MazeNode* c = testMaze->corner;
     std::tuple<int,int> a[] = {std::make_tuple(0,0)};
-    char* txt = testMaze->toString();
-    printf("Test Maze:\n%s",txt);
+    //char* txt = testMaze->toString();
+    //printf("Test Maze:\n%s",txt);
     testMaze->buildMaze(1, a);
     std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(0);
-    txt = testMaze->toString();
+    char* txt = testMaze->toString();
     printf("Test Maze:\n%s",txt);
 }
-// class Frontier{
-// public:
-//     class Node{
-//     public:
-//         MazeNode* node;
-//         Node* next;
-//         Node* prev;
-//         Node(MazeNode* n, Node* nxt, Node* previous){
-//             node = n;
-//             next = nxt;
-//             prev = previous;
-//         }
-//     };
-//     struct FrontierPointer{
-//         Node* location;
-//         int index;
-//         float goalRatio;
-//
-//         FrontierPointer(Node* loc, int ind, float ratio){
-//             location = loc;
-//             index = ind;
-//             goalRatio = ratio;
-//         }
-//
-//         void update(Node* newLoc, int newInd){
-//             location = newLoc;
-//             index = newInd;
-//         }
-//     };
-//
-//     Node* head;
-//     Node* tail;
-//     struct FrontierPointer insertOld;
-//     struct FrontierPointer insertNew;
-//     struct FrontierPointer popPoint;
-//     int len;
-//     Frontier(int n, float inOld, float inNew, float popLoc){
-//         head = NULL;
-//         tail = NULL;
-//         insertOld = FrontierPointer(NULL, 0, inOld);
-//         insertNew = FrontierPointer(NULL, 0, inNew);
-//         popPoint = FrontierPointer(NULL, 0, popLoc);
-//         len = 0;
-//     }
-//     void add(MazeNode* insert, int position){
-//         if(size()<1){
-//             head = new Node(insert);
-//             tail = head;
-//             insertOld.update(head, 0);
-//             insertNew.update(head, 0);
-//             popPoint.update(head, 0);
-//             len++;
-//             return;
-//         }
-//         if(position == size()){
-//             tail->next = new Node(insert, tail, NULL);
-//             tail = tail->next;
-//         }
-//         else if(position == 0){
-//             head->prev = new Node(insert, NULL, head);
-//             head = head.prev;
-//         }
-//         else{
-//             Node* pos = fastGet(position);
-//             Node* temp = pos->prev;
-//             Node* add = new Node(insert, pos, pos->prev);
-//             add->prev->next = add;
-//         }
-//         len++;
-//         updatePointer(insertOld);
-//         updatePointer(insertNew);
-//         updatePointer(popPoint);
-//     }
-//     MazeNode* pop(int pos){
-//         if(size()==0){
-//             return NULL;
-//         }
-//         MazeNode* out;
-//         if(pos == 0){
-//             out = head->node;
-//             head = head->next;
-//             delete head->prev;
-//             head->prev = NULL;
-//         }
-//         else if(pos == size()){
-//             out = tail->node;
-//             tail = tail->prev;
-//             delete tail->next;
-//             tail->next = NULL;
-//         }
-//         else{}
-//         len--;
-//         updatePointer(insertOld);
-//         updatePointer(insertNew);
-//         updatePointer(popPoint);
-//     }
-//     bool empty(){
-//         return size()<=0;
-//     }
-//     int size(){
-//         return len;
-//     }
-//     Node* fastGet(int position){
-//         Node* slider;
-//         int count;
-//         int origin;
-//         int oldDist = distance(insertOld.index, position);
-//         int newDist = distance(insertNew.index, position);
-//         if(position < oldDist && position < new && positionDist < size()-position){
-//             slider = head;
-//             count = position;
-//             origin = 0;
-//         }
-//         else if(oldDist < position && oldDist < newDist && oldDist < size()-position){
-//             slider = insertOld.location;
-//             count = oldDist;
-//             origin = insertOld.index;
-//         }
-//         else if(newDist < position && newDist < oldDist && newDist < size()-position){
-//             slider = insertNew.location;
-//             count = newDist;
-//             origin = insertOld.index;
-//         }
-//         else{
-//             slider = tail;
-//             count = size()-position;
-//             origin = size()-1;
-//         }
-//         for(int i = 0; i<count; i++){
-//             if(origin < position) slider = slider.next;
-//             else slider = slider.prev;
-//         }
-//         return slider;
-//     }
-//     int distance(int a, int b){
-//         return std::abs(a-b);
-//     }
-//     void udatePointer(struct FrontierPointer p){
-//         int goal = ratioToIndex(p.goalRatio, size())
-//         while(goal<p.index){
-//             p.location = p.location.prev;
-//             p.index--;
-//         }
-//         while(goal>p.index){
-//             p.location = p.location.next;
-//             p.index++;
-//         }
-//     }
-//     int ratioToIndex(float ratio, int size){
-//         return static_cast<int>(floor(size*ratio));
-//     }
-// };
