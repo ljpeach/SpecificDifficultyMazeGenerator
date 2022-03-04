@@ -538,8 +538,8 @@ public:
         pushHiNew = 1;
         pushLoOld = 0;
         pushHiOld = 1;
-        popHi = 1;
         popLo = 0;
+        popHi = 1;
         Frontier* field = new Frontier(length*width, (pushHiOld+pushLoOld)/2, (pushHiNew+pushLoNew)/2, (popHi+popLo)/2);
         MazeNode* current;
         Direction wall = None;
