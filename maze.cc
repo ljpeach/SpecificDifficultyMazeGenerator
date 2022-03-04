@@ -449,9 +449,9 @@ public:
     int width;//Horizontal
 
     /*Traversal*/
-    float popLo, popHi;
-    float pushLoOld, pushHiOld;
-    float pushLoNew, pushHiNew;
+    // float popLo, popHi;
+    // float pushLoOld, pushHiOld;
+    // float pushLoNew, pushHiNew;
     float dirBias;
     //interstection ratios
     float ratio0, ratioU, ratioR, ratioD, ratioL, ratioUR, ratioUD, ratioUL,
@@ -533,13 +533,13 @@ public:
         return fullBoard;
     }
 //inOld, float inNew, float popLoc
-    void buildMaze(int starts, std::tuple<int,int>* startCells){
-        pushLoNew = 0;
-        pushHiNew = 1;
-        pushLoOld = 0;
-        pushHiOld = 1;
-        popLo = 0;
-        popHi = 1;
+    void buildMaze(int starts, std::tuple<int,int>* startCells, float* fparams){
+        float pushLoOld = fparams[0];
+        float pushHiOld = fparams[1];
+        float pushLoNew = fparams[2];
+        float pushHiNew = fparams[3];
+        float popLo = fparams[4];
+        float popHi = fparams[5];
         Frontier* field = new Frontier(length*width, (pushHiOld+pushLoOld)/2, (pushHiNew+pushLoNew)/2, (popHi+popLo)/2);
         MazeNode* current;
         Direction wall = None;
@@ -613,7 +613,11 @@ int main(int argc, const char *argv[]){
     std::tuple<int,int> a[] = {std::make_tuple(0,0)};
     //char* txt = testMaze->toString();
     //printf("Test Maze:\n%s",txt);
-    testMaze->buildMaze(1, a);
+    float mazeParam[6];
+    for(int i=0; i<6; i++){
+        mazeParam[i] = atoi(argv[i+1]);
+    }
+    testMaze->buildMaze(1, a, mazeParam);
     std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(0);
     char* txt = testMaze->toString();
     printf("Test Maze:\n%s",txt);
