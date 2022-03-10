@@ -101,24 +101,28 @@ public:
                 if(upNode == NULL) return;
                 upNode->downHall = true;
                 upNode->set = set;
+                upNode->entry = South;
                 upHall = true;
                 break;
             case East:
                 if(rightNode == NULL) return;
                 rightNode->leftHall = true;
                 rightNode->set = set;
+                rightNode->entry = West;
                 rightHall = true;
                 break;
             case South:
                 if(downNode == NULL) return;
                 downNode->upHall = true;
                 downNode->set = set;
+                downNode->entry = North;
                 downHall = true;
                 break;
             case West:
                 if(leftNode == NULL) return;
                 leftNode->rightHall = true;
                 leftNode->set = set;
+                leftNode->entry = East;
                 leftHall = true;
                 break;
             default:
@@ -183,61 +187,6 @@ public:
 
 class Maze{
 public:
-    // class Frontier{
-    // public:
-    //     class Node{
-    //     public:
-    //         MazeNode* node;
-    //         Node* next;
-    //         Node* prev;
-    //         Node(MazeNode* n, Node* nxt, Node* previous){
-    //             node = n;
-    //             next = nxt;
-    //             prev = previous;
-    //         }
-    //     };
-    //     Node* head;
-    //     Node* tail;
-    //     int len;
-    //     Frontier(int n){
-    //         head = NULL;
-    //         tail = NULL;
-    //         len = 0;
-    //     }
-    //     void add(MazeNode* insert, int position){
-    //         if(head == NULL){
-    //             head = new Node(insert, NULL, NULL);
-    //             tail = head;
-    //         }
-    //         else{
-    //             tail->next =new Node(insert, NULL, tail);
-    //             tail = tail->next;
-    //         }
-    //         len++;
-    //     }
-    //     MazeNode* pop(int pos){
-    //         if(size() == 0){
-    //             std::cout << "Cannot pop empty" <<std::endl;
-    //             return NULL;
-    //         }
-    //
-    //         MazeNode* out = tail->node;
-    //         tail = tail->prev;
-    //         if(tail==NULL){
-    //             head = NULL;
-    //         }
-    //         else tail->next = NULL;
-    //         len--;
-    //         return out;
-    //     }
-    //     bool empty(){
-    //         return size()<=0;
-    //     }
-    //     int size(){
-    //         return len;
-    //     }
-    // };
-
     class Frontier{
     public:
         class Node{
@@ -449,10 +398,7 @@ public:
     int width;//Horizontal
 
     /*Traversal*/
-    // float popLo, popHi;
-    // float pushLoOld, pushHiOld;
-    // float pushLoNew, pushHiNew;
-    float dirBias;
+    float dirBias; //below 1/3 is left, 1/3 - 2/3 is straight, 2/3-3/3 is right
     //interstection ratios
     float ratio0, ratioU, ratioR, ratioD, ratioL, ratioUR, ratioUD, ratioUL,
     ratioRD, ratioRL, ratioDR, ratioURD, ratioURL, ratioUDL, ratioRDL, ratio4;
@@ -605,17 +551,20 @@ public:
 };
 
 //g++ maze.cc -o testMaze;./testMaze
+//./testMaze [len] [wid] 0 0 0 0 0 0 - Creates stack-like/DFS behavior
+//./testMaze [len] [wid] 1 1 1 1 0 0 - Creates queue-like/BFS behavior
+//./testMaze [len] [wid] 0 1 0 1 0 1 - Creates random behavior
 int main(int argc, const char *argv[]){
     //use atoi to cast from arg to int
     std::srand(std::time(0));
-    Maze* testMaze = new Maze(10,10);
+    Maze* testMaze = new Maze(atoi(argv[1]),atoi(argv[2]));
     MazeNode* c = testMaze->corner;
     std::tuple<int,int> a[] = {std::make_tuple(0,0)};
     //char* txt = testMaze->toString();
     //printf("Test Maze:\n%s",txt);
     float mazeParam[6];
     for(int i=0; i<6; i++){
-        mazeParam[i] = atoi(argv[i+1]);
+        mazeParam[i] = atoi(argv[i+3]);
     }
     testMaze->buildMaze(1, a, mazeParam);
     std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(0);
