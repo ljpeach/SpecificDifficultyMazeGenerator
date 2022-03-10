@@ -15,6 +15,48 @@ Direction operator ++(Direction& dir, int){
     else dir = static_cast<Direction>(dir+1);
     return old;
 }
+Direction opp(Direction dir){
+    switch(dir){
+        case North:
+            return South;
+        case East:
+            return West;
+        case South:
+            return North;
+        case West:
+            return East;
+        default:
+            return None;
+    }
+}
+Direction left(Direction dir){
+    switch(dir){
+        case North:
+            return West;
+        case East:
+            return North;
+        case South:
+            return East;
+        case West:
+            return South;
+        default:
+            return None;
+    }
+}
+Direction right(Direction dir){
+    switch(dir){
+        case North:
+            return East;
+        case East:
+            return South;
+        case South:
+            return West;
+        case West:
+            return North;
+        default:
+            return None;
+    }
+}
 
 class MazeNode{
 public:
@@ -177,11 +219,32 @@ public:
         return None;
     }
 
-    Direction biasedHall(){
-        return randomHall();
+    Direction biasedHall(float leftBias, float straightBias, float rightBias){
+        if(leftBias == -1) return randomHall();
+        return North;
     }
-    Direction biasedWall(){
-        return randomWall();
+    Direction biasedWall(float leftBias, float straightBias, float rightBias){
+        if(leftBias == -1 || (leftBias==straightBias && straightBias==rightBias && leftBias == rightBias)) return randomWall();
+        bool relNorthWall = wall(opp(entry)) && neighbor(opp(entry))->set==0;
+        bool relEastWall = wall(left(entry)) && neighbor(left(entry))->set==0;
+        bool relWestWall = wall(right(entry)) && neighbor(right(entry))->set==0;
+        if(relNorthWall+relEastWall+relWestWall == 0){
+            return None;
+        }
+        //Of valid walls, remaining biases are at 0.
+        //Must increase by 1 so that a choice is possible despite weight of 0.
+        //essentially will only chose when no other choice.
+        if(relNorthWall*straightBias+relEastWall*leftBias+relWestWall*rightBias == 0){
+            straightBias++;
+            leftBias++;
+            rightBias++;
+        }
+        int randWeighted = std::rand()%(static_cast<int>(relWestWall*rightBias*100
+            + relNorthWall*straightBias*100 + relEastWall*leftBias*100));
+        if(relNorthWall && randWeighted <= (int)(straightBias*100)) return opp(entry);
+        else if (relWestWall && randWeighted - relNorthWall*(int)(straightBias*100) <= (int)(rightBias*100)) return right(entry);
+        else if (relEastWall && randWeighted - relNorthWall*(int)(straightBias*100) - relWestWall*(int)(rightBias*100) <= (int)(leftBias*100)) return left(entry);
+        return None;
     }
 };
 
@@ -478,25 +541,27 @@ public:
         fullBoard[j+1] = '\0';
         return fullBoard;
     }
-//inOld, float inNew, float popLoc
-    void buildMaze(int starts, std::tuple<int,int>* startCells, float* fparams){
+    //if multiple starting coords, does not join sets.
+    void buildMaze(int starts, std::tuple<int,int>* startCells, float* fparams, float* biases){
         float pushLoOld = fparams[0];
         float pushHiOld = fparams[1];
         float pushLoNew = fparams[2];
         float pushHiNew = fparams[3];
         float popLo = fparams[4];
         float popHi = fparams[5];
+        Direction directSelect[] = {North, East, South, West};
         Frontier* field = new Frontier(length*width, (pushHiOld+pushLoOld)/2, (pushHiNew+pushLoNew)/2, (popHi+popLo)/2);
         MazeNode* current;
         Direction wall = None;
         for(int i = 0; i<starts; i++){
             current = getNode(startCells[i]);
             current->set = i+1;//0 is default "not in maze" state
+            current->entry = directSelect[std::rand()%4];
             insertFrontier(field, current, pushLoNew, pushHiNew);
         }
         while(!field->empty()){
             current = popFrontier(field, popLo, popHi);
-            wall = current->biasedWall();
+            wall = current->biasedWall(biases[0], biases[1], biases[2]);
             if(wall==None){continue;}
             current->bridgeDirection(wall);
             if(current->numValidWalls()){
@@ -559,14 +624,20 @@ int main(int argc, const char *argv[]){
     std::srand(std::time(0));
     Maze* testMaze = new Maze(atoi(argv[1]),atoi(argv[2]));
     MazeNode* c = testMaze->corner;
-    std::tuple<int,int> a[] = {std::make_tuple(0,0)};
+    std::tuple<int,int> a[] = {std::make_tuple(0,0)};//, std::make_tuple(atoi(argv[1])-1,atoi(argv[2])-1)};
     //char* txt = testMaze->toString();
     //printf("Test Maze:\n%s",txt);
     float mazeParam[6];
-    for(int i=0; i<6; i++){
-        mazeParam[i] = atoi(argv[i+3]);
+    float biases[3];
+    int i;
+    for(i=0; i<6; i++){
+        mazeParam[i] = atof(argv[i+3]);
     }
-    testMaze->buildMaze(1, a, mazeParam);
+    for(i = 0; i<3; i++){
+        biases[i] = atof(argv[i+9]);
+    }
+    //printf("%f\n", biases[0]);
+    testMaze->buildMaze(1, a, mazeParam, biases);
     std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(0);
     char* txt = testMaze->toString();
     printf("Test Maze:\n%s",txt);
