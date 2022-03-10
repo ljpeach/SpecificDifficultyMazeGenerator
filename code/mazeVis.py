@@ -1,6 +1,10 @@
 import sys
 from PIL import Image
 
+wall = (0,0,0) #black
+space = (255, 255, 255) #white
+special = (255,0,0)
+
 rawFile = open(sys.argv[1], 'r')
 
 fromFile = rawFile.read()
@@ -19,5 +23,10 @@ img = Image.new(mode = "RGB", size = (length, width))
 px = img.load()
 for i in range(length):
     for j in range(width):
-        px[j, i] = (0,0,0) if grid[i][j] == '#' else (255, 255, 255)
+        if grid[i][j] == '#':
+            px[j, i] = wall
+        elif grid[i][j] == ' ':
+            px[j, i] = space
+        else:
+            px[j, i] = special
 img.save("outs/maze.png","PNG")

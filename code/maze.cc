@@ -6,6 +6,8 @@
 #include <ctime>
 #include <math.h>
 #include <cmath>
+#include <vector>
+#include <set>
 
 //Shorthand for directions
 enum Direction {North=0, East, South, West, None};
@@ -77,7 +79,7 @@ public:
 
     //management variables
     int set;//set 0 is "not in maze," or the empty set.
-    bool inMaze;
+    bool visited;
 
     std::tuple<int,int> coordinate;
 
@@ -89,7 +91,7 @@ public:
 
     MazeNode(int st, std::tuple<int,int> coord){
         set = st;
-        inMaze = false;
+        visited = false;
         coordinate = coord;
     }
 
@@ -182,6 +184,21 @@ public:
                 return !downHall&&downNode!=NULL;
             case West:
                 return !leftHall&&leftNode!=NULL;
+            default:
+                std::cout << "Invalid Direction" <<std::endl;
+        }
+    }
+
+    bool hall(Direction dir){
+        switch(dir){
+            case North:
+                return upHall;
+            case East:
+                return rightHall;
+            case South:
+                return downHall;
+            case West:
+                return leftHall;
             default:
                 std::cout << "Invalid Direction" <<std::endl;
         }
@@ -553,8 +570,10 @@ public:
         Frontier* field = new Frontier(length*width, (pushHiOld+pushLoOld)/2, (pushHiNew+pushLoNew)/2, (popHi+popLo)/2);
         MazeNode* current;
         Direction wall = None;
+        MazeNode* setStarts[starts];
         for(int i = 0; i<starts; i++){
             current = getNode(startCells[i]);
+            setStarts[i]  = current;
             current->set = i+1;//0 is default "not in maze" state
             current->entry = directSelect[std::rand()%4];
             insertFrontier(field, current, pushLoNew, pushHiNew);
@@ -571,6 +590,7 @@ public:
                 insertFrontier(field, current->neighbor(wall), pushLoNew, pushHiNew);
             }
         }
+        joinSets(starts, setStarts);
     }
 
     MazeNode* getNode(std::tuple<int,int> coord){
@@ -610,6 +630,59 @@ public:
         else return solutionNodes(0);
     }
 
+    void joinSets(int sets, MazeNode** setStarts){
+        return;
+        // std::vector<MazeNode*>* edgeLists[sets];
+        // std::set<int> inMaze;
+        // Direction directSelect[] = {North, East, South, West};
+        // int i, j, k;
+        // for(i = 0; i<sets; i++){
+        //     edgeLists[i] = setEdges(setStarts[i]);
+        // }
+        // inMaze.insert(setStarts[0]->at(0)->set);
+        // for(i=1; i<sets; i++){
+        //     j=0;
+        //     while(j<edgeLists[i]->size()){
+        //         for(k=0; k<4; k++){
+        //             if(edgeLists[i]->at(j)->wall(directSelect[i]) &&
+        //             edgeLists[i]->at(j)->set != edgeLists[i]->at(j)->neighbor(directSelect[i])->set &&
+        //             !inMaze.contains(edgeLists[i]->at(j)->neighbor(directSelect[i])->set)){
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
+        // for(i=1; i<sets; i++){
+        //
+        // }
+    }
+
+    std::vector<MazeNode*>* setEdges(MazeNode* root){
+        std::vector<MazeNode*>* edges = new std::vector<MazeNode*>;
+        std::vector<MazeNode*> unexplored;
+        unexplored.push_back(root);
+        Direction directSelect[] = {North, East, South, West};
+        int i;
+        bool in;
+        MazeNode* current;
+        while(!unexplored.empty()){
+            current = unexplored.back();
+            current->visited = true;
+            unexplored.pop_back();
+            in = false;
+            for(i = 0; i<4; i++){
+                if(!in && current->wall(directSelect[i]) && current->set != current->neighbor(directSelect[i])->set){
+                    edges->push_back(current);
+                    in = true;
+                }
+                if(current->hall(directSelect[i]) && !current->neighbor(directSelect[i])->visited){
+                    unexplored.push_back(current->neighbor(directSelect[i]));
+                }
+            }
+        }
+        return edges;
+    }
+
     int ratioToIndex(float ratio, int size){
         return static_cast<int>(floor(size*ratio));
     }
@@ -624,7 +697,7 @@ int main(int argc, const char *argv[]){
     std::srand(std::time(0));
     Maze* testMaze = new Maze(atoi(argv[1]),atoi(argv[2]));
     MazeNode* c = testMaze->corner;
-    std::tuple<int,int> a[] = {std::make_tuple(0,0)};//, std::make_tuple(atoi(argv[1])-1,atoi(argv[2])-1)};
+    std::tuple<int,int> a[] = {std::make_tuple(0,0), std::make_tuple(atoi(argv[1])-1,atoi(argv[2])-1)};
     //char* txt = testMaze->toString();
     //printf("Test Maze:\n%s",txt);
     float mazeParam[6];
@@ -637,8 +710,9 @@ int main(int argc, const char *argv[]){
         biases[i] = atof(argv[i+9]);
     }
     //printf("%f\n", biases[0]);
-    testMaze->buildMaze(1, a, mazeParam, biases);
+    testMaze->buildMaze(2, a, mazeParam, biases);
     std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(0);
     char* txt = testMaze->toString();
     printf("Test Maze:\n%s",txt);
+
 }
