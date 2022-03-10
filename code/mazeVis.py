@@ -20,4 +20,4 @@ px = img.load()
 for i in range(length):
     for j in range(width):
         px[i, j] = (0,0,0) if grid[i][j] == '#' else (255, 255, 255)
-img.save("maze.png","PNG")
+img.save("outs/maze.png","PNG")
