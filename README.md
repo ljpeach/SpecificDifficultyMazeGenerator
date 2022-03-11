@@ -12,7 +12,6 @@ binaries/testMaze 10 10 0 0 0 0 0 0 1 1 1 > outs/maze.txt ; python3 code/mazeVis
 
 
 Current issues:
-    Sets are not joined when using multiple starting coordinates
     Intersection ratios are not implemented
     Solution path limited to top left and bottom right corners
     Neural Network not set up

@@ -8,6 +8,7 @@
 #include <cmath>
 #include <vector>
 #include <set>
+#include <forward_list>
 
 //Shorthand for directions
 enum Direction {North=0, East, South, West, None};
@@ -208,14 +209,26 @@ public:
         return upHall+rightHall+downHall+leftHall;
     }
 
-    int numValidWalls(){
+    int numValidWalls(int targetSet){
         int wallCount = 0;
         for(Direction compass=North; compass<None; compass++){
-            if(wall(compass) && neighbor(compass)!=NULL && neighbor(compass)->set==0){
+            if(wall(compass) && neighbor(compass)!=NULL && neighbor(compass)->set==targetSet){
                 wallCount++;
             }
         }
         return wallCount;
+    }
+
+    int numNeighborSets(std::set<int>* ignoreSets){
+        Direction dir = North;
+        int count = 0;
+        while(dir!=None){
+            if(wall(dir) && ignoreSets->find(neighbor(dir)->set) == ignoreSets->end() && neighbor(dir)->set!=set){
+                count++;
+            }
+            dir++;
+        }
+        return count;
     }
 
     Direction randomHall(){
@@ -226,11 +239,11 @@ public:
         }
         return None;
     }
-    Direction randomWall(){
-        if(numValidWalls() == 0) return None;
-        int pos = std::rand()%numValidWalls();
+    Direction randomWall(int targetSet){
+        if(numValidWalls(targetSet) == 0) return None;
+        int pos = std::rand()%numValidWalls(targetSet);
         for(Direction compass=North; compass<None; compass++){
-            if(wall(compass) && neighbor(compass)!=NULL && neighbor(compass)->set==0&&!pos--)
+            if(wall(compass) && neighbor(compass)!=NULL && neighbor(compass)->set==targetSet&&!pos--)
                 return compass;
         }
         return None;
@@ -240,11 +253,11 @@ public:
         if(leftBias == -1) return randomHall();
         return North;
     }
-    Direction biasedWall(float leftBias, float straightBias, float rightBias){
-        if(leftBias == -1 || (leftBias==straightBias && straightBias==rightBias && leftBias == rightBias)) return randomWall();
-        bool relNorthWall = wall(opp(entry)) && neighbor(opp(entry))->set==0;
-        bool relEastWall = wall(left(entry)) && neighbor(left(entry))->set==0;
-        bool relWestWall = wall(right(entry)) && neighbor(right(entry))->set==0;
+    Direction biasedWall(float leftBias, float straightBias, float rightBias, int targetSet){
+        if(leftBias == -1 || (leftBias==straightBias && straightBias==rightBias && leftBias == rightBias)) return randomWall(targetSet);
+        bool relNorthWall = wall(opp(entry)) && neighbor(opp(entry))->set==targetSet;
+        bool relEastWall = wall(left(entry)) && neighbor(left(entry))->set==targetSet;
+        bool relWestWall = wall(right(entry)) && neighbor(right(entry))->set==targetSet;
         if(relNorthWall+relEastWall+relWestWall == 0){
             return None;
         }
@@ -580,17 +593,17 @@ public:
         }
         while(!field->empty()){
             current = popFrontier(field, popLo, popHi);
-            wall = current->biasedWall(biases[0], biases[1], biases[2]);
+            wall = current->biasedWall(biases[0], biases[1], biases[2], 0);
             if(wall==None){continue;}
             current->bridgeDirection(wall);
-            if(current->numValidWalls()){
+            if(current->numValidWalls(0)){
                 insertFrontier(field, current, pushLoOld, pushHiOld);
             }
-            if(current->neighbor(wall)->numValidWalls()){
+            if(current->neighbor(wall)->numValidWalls(0)){
                 insertFrontier(field, current->neighbor(wall), pushLoNew, pushHiNew);
             }
         }
-        joinSets(starts, setStarts);
+        joinSets(starts, setStarts, biases);
     }
 
     MazeNode* getNode(std::tuple<int,int> coord){
@@ -630,35 +643,44 @@ public:
         else return solutionNodes(0);
     }
 
-    void joinSets(int sets, MazeNode** setStarts){
-        return;
-        // std::vector<MazeNode*>* edgeLists[sets];
-        // std::set<int> inMaze;
-        // Direction directSelect[] = {North, East, South, West};
-        // int i, j, k;
-        // for(i = 0; i<sets; i++){
-        //     edgeLists[i] = setEdges(setStarts[i]);
-        // }
-        // inMaze.insert(setStarts[0]->at(0)->set);
-        // for(i=1; i<sets; i++){
-        //     j=0;
-        //     while(j<edgeLists[i]->size()){
-        //         for(k=0; k<4; k++){
-        //             if(edgeLists[i]->at(j)->wall(directSelect[i]) &&
-        //             edgeLists[i]->at(j)->set != edgeLists[i]->at(j)->neighbor(directSelect[i])->set &&
-        //             !inMaze.contains(edgeLists[i]->at(j)->neighbor(directSelect[i])->set)){
-        //                 break;
-        //             }
-        //         }
-        //     }
-        // }
-        // for(i=1; i<sets; i++){
-        //
-        // }
+    void joinSets(int sets, MazeNode** setStarts, float* biases){
+        //contianer setup
+        std::forward_list<MazeNode*>* edgeList = new std::forward_list<MazeNode*>();
+        std::set<int>* inSets = new std::set<int>();
+        //initial set
+        inSets->insert(setStarts[0]->set);
+        setEdges(setStarts[0], edgeList, inSets);
+
+        int pos, remPos, nSets, newAddition;
+        Direction dir;
+        std::forward_list<MazeNode*>::iterator ptr;
+        while(!edgeList->empty()){
+            remPos = std::rand()%std::distance(edgeList->begin(),edgeList->end());
+            for(ptr = edgeList->begin(), pos = 0; pos<remPos; ptr++, pos++);
+            nSets = std::rand()%(*ptr)->numNeighborSets(inSets);
+            dir = North;
+            while(dir!=None){
+                if((*ptr)->wall(dir) && inSets->find((*ptr)->neighbor(dir)->set)==inSets->end()){
+                    if(nSets!=0){
+                        nSets--;
+                    }
+                    else{
+                        newAddition = (*ptr)->neighbor(dir)->set;
+                        break;
+                    }
+                }
+                dir++;
+            }
+            dir = (*ptr)->biasedWall(biases[0], biases[1], biases[2], newAddition);
+            (*ptr)->bridgeDirection(dir);
+            inSets->insert(newAddition);
+            edgeList->remove_if([inSets](MazeNode* mn){return mn->numNeighborSets(inSets)==0;});
+            setEdges((*ptr)->neighbor(dir), edgeList, inSets);
+        }
+
     }
 
-    std::vector<MazeNode*>* setEdges(MazeNode* root){
-        std::vector<MazeNode*>* edges = new std::vector<MazeNode*>;
+    void setEdges(MazeNode* root, std::forward_list<MazeNode*>* edgeList, std::set<int>* inSets){
         std::vector<MazeNode*> unexplored;
         unexplored.push_back(root);
         Direction directSelect[] = {North, East, South, West};
@@ -671,8 +693,9 @@ public:
             unexplored.pop_back();
             in = false;
             for(i = 0; i<4; i++){
-                if(!in && current->wall(directSelect[i]) && current->set != current->neighbor(directSelect[i])->set){
-                    edges->push_back(current);
+                if(!in && current->wall(directSelect[i]) && current->set != current->neighbor(directSelect[i])->set
+                    && inSets->find(current->neighbor(directSelect[i])->set)==inSets->end()){
+                    edgeList->push_front(current);
                     in = true;
                 }
                 if(current->hall(directSelect[i]) && !current->neighbor(directSelect[i])->visited){
@@ -680,7 +703,6 @@ public:
                 }
             }
         }
-        return edges;
     }
 
     int ratioToIndex(float ratio, int size){
@@ -712,7 +734,13 @@ int main(int argc, const char *argv[]){
     //printf("%f\n", biases[0]);
     testMaze->buildMaze(2, a, mazeParam, biases);
     std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(0);
+    std::forward_list<MazeNode*>* edgeList = new std::forward_list<MazeNode*>();
+    std::set<int>* inSets = new std::set<int>();
+    testMaze->setEdges(testMaze->corner, edgeList, inSets);
+    std::forward_list<MazeNode*>::iterator ptr;
+    for(ptr = edgeList->begin(); ptr!=edgeList->end(); ptr++){
+        (*ptr)->display = '@';
+    }
     char* txt = testMaze->toString();
     printf("Test Maze:\n%s",txt);
-
 }
