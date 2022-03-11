@@ -11,7 +11,7 @@ Example run after calling make:
 binaries/testMaze 10 10 0 0 0 0 0 0 1 1 1 > outs/maze.txt ; python3 code/mazeVis.py outs/maze.txt
 
 Architecture Diagram
-![Architecture Diagram]("./Software Architecture Diagram.jpg")
+![Architecture Diagram]("Software Architecture Diagram.jpg")
 
 Current issues:
     Intersection ratios are not implemented
