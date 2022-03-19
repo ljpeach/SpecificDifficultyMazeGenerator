@@ -15,6 +15,9 @@ binaries/testMaze 10 10 0 0 0 0 0 0 1 1 1 > outs/maze.txt ; python3 code/mazeVis
 ## Architecture Diagram
 ![Architecture Diagram](SoftwareArchitectureDiagram.jpg)
 
+## Softare Demonstration Video Link
+https://youtu.be/llbMlpuG2ic
+
 ## Current issues:
 - Intersection ratios are not implemented
 - Solution path limited to top left and bottom right corners
