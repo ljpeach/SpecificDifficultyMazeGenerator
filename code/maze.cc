@@ -637,10 +637,12 @@ public:
         return placeHold;
     }
 
-    std::tuple<MazeNode*, MazeNode*> solutionNodes(int solRank){
-        if(solRank==0){
+    std::tuple<MazeNode*, MazeNode*> solutionNodes(float rankRatio){
+        if(rankRatio<0){
             return std::make_tuple(corner, getNode(std::make_tuple(length-1,width-1)));
         }
+        int n = (2*(length-1)+2*(width-1))-1;
+        int solRank = ((n*n+n)/2) * rankRatio;
         char digits[] = {'0','1','2','3','4','5','6','7','8','9'};
         int i,j;
         int partharray[length*width];
@@ -711,7 +713,7 @@ public:
 
         //Select ranked item
         std::tuple<MazeNode*, MazeNode*> ans;
-        for(i=0; i<solRank; i++){
+        for(i=0; i<=solRank; i++){
             ans = std::get<1>(solutionHeap.front());
             std::pop_heap(solutionHeap.begin(), solutionHeap.end(), tupleComp);
             solutionHeap.pop_back();
@@ -809,9 +811,9 @@ public:
 };
 
 //g++ maze.cc -o testMaze;./testMaze
-//./testMaze [len] [wid] 0 0 0 0 0 0 - Creates stack-like/DFS behavior
-//./testMaze [len] [wid] 1 1 1 1 0 0 - Creates queue-like/BFS behavior
-//./testMaze [len] [wid] 0 1 0 1 0 1 - Creates random behavior
+//./testMaze [len] [wid] 0 0 0 0 0 0 1 1 1 0 - Creates stack-like/DFS behavior
+//./testMaze [len] [wid] 1 1 1 1 0 0 1 1 1 0 - Creates queue-like/BFS behavior
+//./testMaze [len] [wid] 0 1 0 1 0 1 1 1 1 0 - Creates random behavior
 int main(int argc, const char *argv[]){
     //use atoi to cast from arg to int
     std::srand(std::time(0));
@@ -831,11 +833,16 @@ int main(int argc, const char *argv[]){
     }
     //printf("%f\n", biases[0]);
     testMaze->buildMaze(1, a, mazeParam, biases);
-    char* txt = testMaze->toString();
-    printf("Test Maze:\n%s",txt);
-    // std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(1);
-    // std::get<0>(entex)->display = '@';
-    // std::get<1>(entex)->display = '@';
-    // txt = testMaze->toString();
-    // printf("Test Maze:\n%s",txt);
+    if(argc<13){
+        char* txt = testMaze->toString();
+        printf("Test Maze:\n%s",txt);
+    }
+    else{
+        float solutionRankRatio = atof(argv[12]);
+        std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(solutionRankRatio);
+        std::get<0>(entex)->display = '@';
+        std::get<1>(entex)->display = '@';
+        char* txt = testMaze->toString();
+        printf("Test Maze:\n%s",txt);
+    }
 }
