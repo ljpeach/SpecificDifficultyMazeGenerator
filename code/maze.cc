@@ -9,6 +9,7 @@
 #include <vector>
 #include <set>
 #include <forward_list>
+#include <algorithm>
 
 //Shorthand for directions
 enum Direction {North=0, East, South, West, None};
@@ -640,7 +641,82 @@ public:
         if(solRank==0){
             return std::make_tuple(corner, getNode(std::make_tuple(length-1,width-1)));
         }
-        else return solutionNodes(0);
+        char digits[] = {'0','1','2','3','4','5','6','7','8','9'};
+        int i,j;
+        int partharray[length*width];
+        for(i=0; i<length*width; i++) partharray[i] = -1;
+        std::vector<std::tuple<int,std::tuple<MazeNode*,MazeNode*>>> solutionHeap;
+        struct solvNode* edgeNodes[2*(length-1)+2*(width-1)];
+        int edges = 0;
+        int pathLen;
+        //built the tree, insert perimeter nodes into the
+        struct solvNode* root, *current, *addition, *current2;
+        root = new solvNode(0, NULL, corner);
+        edgeNodes[edges] = root;
+        //root->loc->display = digits[root->depth];
+        edges++;
+        current = root;
+        std::tuple<int, int> addCoord;
+        Direction dir;
+        std::forward_list<solvNode*> treeTrav;
+        //Build tree structure
+        treeTrav.push_front(current);
+        while(!treeTrav.empty()){
+            current = treeTrav.front();
+            treeTrav.pop_front();
+            for(dir = North; dir!=None; dir++){
+                if(current->loc->hall(dir) && (current->parent == NULL ||
+                    current->loc->neighbor(dir)->coordinate!=current->parent->loc->coordinate))  {
+                    addition = new solvNode(current->depth+1, current, current->loc->neighbor(dir));
+                    //addition->loc->display = digits[current->depth+1];
+                    treeTrav.push_front(addition);
+                    addCoord = addition->loc->coordinate;
+                    if(std::get<0>(addCoord) == 0 || std::get<0>(addCoord) == length-1 ||
+                       std::get<1>(addCoord) == 0 || std::get<1>(addCoord) == width-1){
+                           edgeNodes[edges] = addition;
+                           edges++;
+                       }
+                }
+            }
+        }
+        //Calculate distance between all pairs of perimeter nodes
+        for(i = 0; i<(2*(length-1)+2*(width-1)-1); i++){
+            for(j=i+1; j<(2*(length-1)+2*(width-1)); j++){
+                current = edgeNodes[i];
+                current2 = edgeNodes[j];
+                pathLen = 0;
+                while(current->loc->coordinate!=current2->loc->coordinate){
+                    if(current->depth == 0 || current2->depth == 0){
+                        pathLen += current->depth + current2->depth;
+                        break;
+                    }
+                    else if(current->depth > current2->depth){
+                        current = current->parent;
+                        pathLen++;
+                    }
+                    else if(current->depth < current2->depth){
+                        current2 = current2->parent;
+                        pathLen++;
+                    }
+                    else{
+                        current = current->parent;
+                        current2 = current2->parent;
+                        pathLen+=2;
+                    }
+                }
+                solutionHeap.push_back(std::make_tuple(pathLen, std::make_tuple(edgeNodes[i]->loc, edgeNodes[j]->loc)));
+                std::push_heap(solutionHeap.begin(), solutionHeap.end(), tupleComp);
+            }
+        }
+
+        //Select ranked item
+        std::tuple<MazeNode*, MazeNode*> ans;
+        for(i=0; i<solRank; i++){
+            ans = std::get<1>(solutionHeap.front());
+            std::pop_heap(solutionHeap.begin(), solutionHeap.end(), tupleComp);
+            solutionHeap.pop_back();
+        }
+        return ans;
     }
 
     void joinSets(int sets, MazeNode** setStarts, float* biases){
@@ -708,6 +784,28 @@ public:
     int ratioToIndex(float ratio, int size){
         return static_cast<int>(floor(size*ratio));
     }
+
+    static bool tupleComp(std::tuple<int,std::tuple<MazeNode*,MazeNode*>> a, std::tuple<int,std::tuple<MazeNode*,MazeNode*>> b){
+        return std::get<0>(a) < std::get<0>(b);
+    }
+
+    struct solvNode{
+        int depth;
+        struct solvNode* parent;
+        MazeNode* loc;
+
+        solvNode(){
+            depth = 0;
+            parent = NULL;
+            loc = NULL;
+        }
+
+        solvNode(int dep, struct solvNode* par, MazeNode* pos){
+            depth = dep;
+            parent = par;
+            loc = pos;
+        }
+    };
 };
 
 //g++ maze.cc -o testMaze;./testMaze
@@ -719,7 +817,7 @@ int main(int argc, const char *argv[]){
     std::srand(std::time(0));
     Maze* testMaze = new Maze(atoi(argv[1]),atoi(argv[2]));
     MazeNode* c = testMaze->corner;
-    std::tuple<int,int> a[] = {std::make_tuple(0,0), std::make_tuple(atoi(argv[1])-1,atoi(argv[2])-1)};
+    std::tuple<int,int> a[] = {std::make_tuple(atoi(argv[1])/2,atoi(argv[2])/2)};//std::make_tuple(0,0),
     //char* txt = testMaze->toString();
     //printf("Test Maze:\n%s",txt);
     float mazeParam[6];
@@ -732,15 +830,12 @@ int main(int argc, const char *argv[]){
         biases[i] = atof(argv[i+9]);
     }
     //printf("%f\n", biases[0]);
-    testMaze->buildMaze(2, a, mazeParam, biases);
-    std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(0);
-    std::forward_list<MazeNode*>* edgeList = new std::forward_list<MazeNode*>();
-    std::set<int>* inSets = new std::set<int>();
-    testMaze->setEdges(testMaze->corner, edgeList, inSets);
-    std::forward_list<MazeNode*>::iterator ptr;
-    for(ptr = edgeList->begin(); ptr!=edgeList->end(); ptr++){
-        (*ptr)->display = '@';
-    }
+    testMaze->buildMaze(1, a, mazeParam, biases);
     char* txt = testMaze->toString();
     printf("Test Maze:\n%s",txt);
+    // std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(1);
+    // std::get<0>(entex)->display = '@';
+    // std::get<1>(entex)->display = '@';
+    // txt = testMaze->toString();
+    // printf("Test Maze:\n%s",txt);
 }
