@@ -26,7 +26,7 @@ int main(int argc, const char *argv[]){
     testMaze.buildMaze(1, a, mazeParam, biases);
     if(argc<13){
         char* txt = testMaze.toString();
-        printf("Test Maze:\n%s",txt);
+        printf("%s",txt);
     }
     else{
         float solutionRankRatio = atof(argv[12]);
@@ -34,6 +34,6 @@ int main(int argc, const char *argv[]){
         std::get<0>(entex)->display = '@';
         std::get<1>(entex)->display = '@';
         char* txt = testMaze.toString();
-        printf("Test Maze:\n%s",txt);
+        printf("%s",txt);
     }
 }

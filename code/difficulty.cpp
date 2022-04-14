@@ -18,16 +18,16 @@ int main(int argc, const char *argv[]){
     testMaze.buildMaze(1, a, mazeParam, biases);
     if(argc<13){
         char* txt = testMaze.toString();
-        printf("Test Maze:\n%s",txt);
+        printf("%s",txt);
     }
     else{
         float solutionRankRatio = atof(argv[12]);
         std::tuple<MazeNode*, MazeNode*> entex = testMaze.solutionNodes(solutionRankRatio);
         char* txt = testMaze.toString();
-        printf("Test Maze:\n%s",txt);
+        printf("%s",txt);
         float mcd = mcclendonDiff(testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
         float bfun = bellotFun(testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
-        txt = testMaze.toString();
-        printf("Test Maze:\n%sDifficulty: %f\nFunness: %f\n",txt, mcd, bfun);
+        //txt = testMaze.toString();
+        printf("Difficulty: %f\nFunness: %f\n", mcd, bfun);
     }
 }

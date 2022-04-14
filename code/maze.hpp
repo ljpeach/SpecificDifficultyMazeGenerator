@@ -608,6 +608,10 @@ public:
         joinSets(starts, setStarts, biases);
     }
 
+    void buildFromFile(){
+        
+    }
+
     MazeNode* getNode(std::tuple<int,int> coord){
         int row = std::get<0>(coord), col = std::get<1>(coord);
         if(row >= length || col >= width || row < 0 || col < 0){
