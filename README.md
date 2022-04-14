@@ -20,6 +20,7 @@ https://youtu.be/llbMlpuG2ic
 
 ## Current issues:
 - Intersection ratios are not implemented
+- Read in maze from file not implemented
 - Neural Network not set up
 - Difficulty models not written
 - Agent functions for data analysis not written

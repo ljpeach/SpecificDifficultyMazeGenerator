@@ -4,7 +4,7 @@
 #include <iostream>
 #include <tuple>
 #include <ctime>
-#include <math.h>
+//#include <math.h>
 #include <cmath>
 #include <vector>
 #include <set>
@@ -604,6 +604,7 @@ public:
                 insertFrontier(field, current->neighbor(wall), pushLoNew, pushHiNew);
             }
         }
+        delete field;
         joinSets(starts, setStarts, biases);
     }
 
@@ -651,9 +652,11 @@ public:
         struct solvNode* edgeNodes[2*(length-1)+2*(width-1)];
         int edges = 0;
         int pathLen;
+        std::forward_list<solvNode*> memlist;
         //built the tree, insert perimeter nodes into the
         struct solvNode* root, *current, *addition, *current2;
         root = new solvNode(0, NULL, corner);
+        memlist.push_front(root);
         edgeNodes[edges] = root;
         //root->loc->display = digits[root->depth];
         edges++;
@@ -670,6 +673,7 @@ public:
                 if(current->loc->hall(dir) && (current->parent == NULL ||
                     current->loc->neighbor(dir)->coordinate!=current->parent->loc->coordinate))  {
                     addition = new solvNode(current->depth+1, current, current->loc->neighbor(dir));
+                    memlist.push_front(addition);
                     //addition->loc->display = digits[current->depth+1];
                     treeTrav.push_front(addition);
                     addCoord = addition->loc->coordinate;
@@ -709,6 +713,11 @@ public:
                 solutionHeap.push_back(std::make_tuple(pathLen, std::make_tuple(edgeNodes[i]->loc, edgeNodes[j]->loc)));
                 std::push_heap(solutionHeap.begin(), solutionHeap.end(), tupleComp);
             }
+        }
+
+        while(!memlist.empty()){
+            delete memlist.front();
+            memlist.pop_front();
         }
 
         //Select ranked item
@@ -755,7 +764,8 @@ public:
             edgeList->remove_if([inSets](MazeNode* mn){return mn->numNeighborSets(inSets)==0;});
             setEdges((*ptr)->neighbor(dir), edgeList, inSets);
         }
-
+        delete edgeList;
+        delete inSets;
     }
 
     void setEdges(MazeNode* root, std::forward_list<MazeNode*>* edgeList, std::set<int>* inSets){
@@ -809,40 +819,3 @@ public:
         }
     };
 };
-
-//g++ maze.cc -o testMaze;./testMaze
-//./testMaze [len] [wid] 0 0 0 0 0 0 1 1 1 0 - Creates stack-like/DFS behavior
-//./testMaze [len] [wid] 1 1 1 1 0 0 1 1 1 0 - Creates queue-like/BFS behavior
-//./testMaze [len] [wid] 0 1 0 1 0 1 1 1 1 0 - Creates random behavior
-int main(int argc, const char *argv[]){
-    //use atoi to cast from arg to int
-    std::srand(std::time(0));
-    Maze* testMaze = new Maze(atoi(argv[1]),atoi(argv[2]));
-    MazeNode* c = testMaze->corner;
-    std::tuple<int,int> a[] = {std::make_tuple(atoi(argv[1])/2,atoi(argv[2])/2)};//std::make_tuple(0,0),
-    //char* txt = testMaze->toString();
-    //printf("Test Maze:\n%s",txt);
-    float mazeParam[6];
-    float biases[3];
-    int i;
-    for(i=0; i<6; i++){
-        mazeParam[i] = atof(argv[i+3]);
-    }
-    for(i = 0; i<3; i++){
-        biases[i] = atof(argv[i+9]);
-    }
-    //printf("%f\n", biases[0]);
-    testMaze->buildMaze(1, a, mazeParam, biases);
-    if(argc<13){
-        char* txt = testMaze->toString();
-        printf("Test Maze:\n%s",txt);
-    }
-    else{
-        float solutionRankRatio = atof(argv[12]);
-        std::tuple<MazeNode*, MazeNode*> entex = testMaze->solutionNodes(solutionRankRatio);
-        std::get<0>(entex)->display = '@';
-        std::get<1>(entex)->display = '@';
-        char* txt = testMaze->toString();
-        printf("Test Maze:\n%s",txt);
-    }
-}
