@@ -16,7 +16,7 @@ binaries/testMaze 10 10 0 0 0 0 0 0 1 1 1 0 > outs/maze.txt ; python3 code/mazeV
 ![Architecture Diagram](SoftwareArchitectureDiagram.jpg)
 
 ## Softare Demonstration Video Link
-https://youtu.be/llbMlpuG2ic
+https://youtu.be/TULqd7oy9F8
 
 ## Current issues:
 - Maze Generation:
