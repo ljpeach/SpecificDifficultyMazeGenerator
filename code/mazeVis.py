@@ -29,4 +29,4 @@ for i in range(length):
             px[j, i] = space
         else:
             px[j, i] = special
-img.save("outs/maze.png","PNG")
+img.save(sys.argv[2],"PNG")

@@ -25,9 +25,10 @@ int main(int argc, const char *argv[]){
         float solutionRankRatio = atof(argv[12]);
         std::tuple<MazeNode*, MazeNode*> entex = testMaze.solutionNodes(solutionRankRatio);
         float mcd = mcclendonDiff(&testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
-        float bfun = bellotFun(testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        float bfun1 = bellotFun(&testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        float bfun2 = bellotFun(&testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcd);
         char* txt = testMaze.toString();
-        printf("%sDifficulty: %f\n",txt , mcd);
-        // printf("Difficulty: %f\nFunness: %f\n", mcd, bfun);
+        // printf("%sDifficulty: %f\n",txt , mcd);
+        printf("%sDifficulty: %f\nFunness: %f/%f\n",txt, mcd, bfun1, bfun2);
     }
 }

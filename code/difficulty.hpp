@@ -9,9 +9,10 @@
 #include <set>
 #include "maze.hpp"
 
-struct ExplrNode{
-    struct ExplrNode* parent;
-    struct ExplrNode* children[3];
+class ExplrNode{
+public:
+    ExplrNode* parent;
+    ExplrNode* children[3];
     MazeNode* loc;
 
     ExplrNode(){
@@ -22,7 +23,7 @@ struct ExplrNode{
         children[2] = NULL;
     }
 
-    ExplrNode(struct ExplrNode* par, MazeNode* pos){
+    ExplrNode(ExplrNode* par, MazeNode* pos){
         parent = par;
         loc = pos;
         children[0] = NULL;
@@ -39,7 +40,6 @@ struct ExplrNode{
         }
         return None;
     }
-
 };
 
 class WallFrame{
@@ -51,8 +51,8 @@ public:
         frameBL = NULL;
         frameBR = NULL;
     }
-    WallFrame(Maze m){
-        reposition(m.corner);
+    WallFrame(Maze *m){
+        reposition(m->corner);
     }
     WallFrame(MazeNode* ul, MazeNode* ur, MazeNode* bl, MazeNode* br){
         frameUL = ul;
@@ -193,9 +193,9 @@ public:
 
 float mcclendonDiff(Maze *maze, std::tuple<int, int> startCoord, std::tuple<int, int> endCoord){
     //Determine solution path
-    std::forward_list<struct ExplrNode*> travLst;
-    struct ExplrNode* goal,* gate;
-    struct ExplrNode* current,* hallSlide;
+    std::forward_list<ExplrNode*> travLst;
+    ExplrNode* goal,* gate;
+    ExplrNode* current,* hallSlide;
     Direction dir, entrance;
     int child, run, length;
     float sum, solComp, trailComp;
@@ -300,8 +300,8 @@ float mcclendonDiff(Maze *maze, std::tuple<int, int> startCoord, std::tuple<int,
     return log(solComp) + trailComp;
 }
 
-float bellotFun(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, int> endCoord){
-    if(maze.length < 2 && maze.width < 2){
+int nonSigWalls(Maze *maze, std::tuple<int, int> startCoord, std::tuple<int, int> endCoord){
+    if(maze->length < 2 && maze->width < 2){
         return 0;
     }
     int nswalls = 0;
@@ -354,6 +354,17 @@ float bellotFun(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, int>
             }
         }
     }
-    printf("NS walls: %d\n", nswalls);
-    return nswalls/mcclendonDiff(&maze, startCoord, endCoord);
+    return nswalls;
+}
+
+float bellotFun(int nswalls, float mcclendon){
+    return nswalls/mcclendon;
+}
+
+float bellotFun(Maze *maze, std::tuple<int, int> startCoord, std::tuple<int, int> endCoord, float mcclendon){
+    return nonSigWalls(maze, startCoord, endCoord)/mcclendon;
+}
+
+float bellotFun(Maze *maze, std::tuple<int, int> startCoord, std::tuple<int, int> endCoord){
+    return nonSigWalls(maze, startCoord, endCoord)/mcclendonDiff(maze, startCoord, endCoord);
 }

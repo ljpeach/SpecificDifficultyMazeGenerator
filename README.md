@@ -13,11 +13,11 @@ Uses g++ to compile.
 
     binaries/testSuite [length and width]
 
-    python3 code/mazeVis.py [maze text file]
+    python3 code/mazeVis.py [maze text file] [output image file (should include .png extension)]
 
 
 ### Example run after calling make:
-binaries/testMaze 10 10 0 0 0 0 0 0 1 1 1 0 > outs/maze.txt ; python3 code/mazeVis.py outs/maze.txt
+binaries/mazeGen 10 10 0 0 0 0 0 0 1 1 1 0 > outs/maze.txt ; python3 code/mazeVis.py outs/maze.txt outs/maze.png
 
 ## Architecture Diagram
 ![Architecture Diagram](SoftwareArchitectureDiagram.jpg)
@@ -25,12 +25,12 @@ binaries/testMaze 10 10 0 0 0 0 0 0 1 1 1 0 > outs/maze.txt ; python3 code/mazeV
 ## Softare Demonstration Video Link
 https://youtu.be/TULqd7oy9F8
 
-## Current issues:
+## Current Issues/Future Plans:
 - Maze Generation:
     - Intersection ratios are not implemented
     - Read in maze from file not implemented
-- Difficulty Bugs:
-    - Bellot Fun model segfault
+- Difficulty Model:
+    - Investigate alterations to models that account for super short solution path mazes (trivial adjacent start and end points)
 - Neural Network not set up
 - Agent functions for data analysis not written
 - Overarching UI not implemented
