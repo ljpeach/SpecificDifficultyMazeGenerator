@@ -7,7 +7,14 @@ Code for generating mazes of specific difficulty.
 Uses g++ to compile.
 
 ## Usage:
-    binaries/mazeGen [length] [width] [old node push location low] [old node push location low] [new node push location low] [new node push location low] [pop location low] [pop location high] [left bias] [straight bias] [right bias] [solution length rank ratio]
+    binaries/mazeGen [length] [width] [old node push location low] [old node push location low] [new node push location low] [new node push location low] [pop location low] [pop location high] [left bias] [straight bias] [right bias] [solution length rank ratio. Leave empty for no start and end points]
+
+    binaries/Difficulty [length] [width] [old node push location low] [old node push location low] [new node push location low] [new node push location low] [pop location low] [pop location high] [left bias] [straight bias] [right bias] [solution length rank ratio. Leave empty for standard maze generation]
+
+    binaries/testSuite [length and width]
+
+    python3 code/mazeVis.py [maze text file]
+
 
 ### Example run after calling make:
 binaries/testMaze 10 10 0 0 0 0 0 0 1 1 1 0 > outs/maze.txt ; python3 code/mazeVis.py outs/maze.txt
@@ -21,8 +28,9 @@ https://youtu.be/TULqd7oy9F8
 ## Current issues:
 - Maze Generation:
     - Intersection ratios are not implemented
-    - Resolve 1x1 maze seg fault for solution pathing
     - Read in maze from file not implemented
+- Difficulty Bugs:
+    - Bellot Fun model segfault
 - Neural Network not set up
 - Agent functions for data analysis not written
 - Overarching UI not implemented

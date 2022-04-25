@@ -191,7 +191,7 @@ public:
     }
 };
 
-float mcclendonDiff(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, int> endCoord){
+float mcclendonDiff(Maze *maze, std::tuple<int, int> startCoord, std::tuple<int, int> endCoord){
     //Determine solution path
     std::forward_list<struct ExplrNode*> travLst;
     struct ExplrNode* goal,* gate;
@@ -201,7 +201,7 @@ float mcclendonDiff(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, 
     float sum, solComp, trailComp;
     std::set<std::tuple<int,int>> solNodes;
 
-    goal = new ExplrNode(NULL, maze.getNode(endCoord));
+    goal = new ExplrNode(NULL, maze->getNode(endCoord));
     travLst.push_front(goal);
     while(!travLst.empty()){
         current = travLst.front();
@@ -226,11 +226,12 @@ float mcclendonDiff(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, 
     entrance = None;
     run = 0;
     length = -1;
-    sum = 0;
+    sum = 1;
     while(current!=NULL){
-        //current->loc->display = '@';
+        current->loc->display = '@';
         solNodes.insert(current->loc->coordinate);
-        if(current->loc->numHalls()>2){//intersection
+        if(current->loc->numHalls()>2 || (current->loc->numHalls()==2 && (current->loc->coordinate == startCoord || current->loc->coordinate == endCoord))){//intersection
+            //printf("adding\n");
             travLst.push_front(current);
         }
         if(current->loc->numHalls()==1 && current->parent!=NULL){//not last node, also dead end
@@ -245,7 +246,9 @@ float mcclendonDiff(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, 
             run++;
         }
         else{//turn of any sort. includes final position in trail.
-            sum+=(1.0/(2*run));
+            if(run!=0){
+                sum+=(1.0/(2*run));
+            }
             run = 1;
         }
         length++;
@@ -253,13 +256,16 @@ float mcclendonDiff(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, 
         current = current->parent;
     }
     solComp = length * sum;
+    //printf("length: %d\n", length);
+    //printf("sum: %d\n", sum);
     //go through trail by trail, adding new intersections as starting points. Accumulate complexity data for each, start summing
-    trailComp = 1;
+    trailComp = 0;
     while(!travLst.empty()){
         current = travLst.front();
         travLst.pop_front();
         for(child = 0; child<current->loc->numHalls()-1; child++){
             if(solNodes.count(current->children[child]->loc->coordinate)>0) continue;
+            //printf("here\n");
             run = length = 1;
             sum = 0;
             hallSlide = current->children[child];
@@ -290,6 +296,7 @@ float mcclendonDiff(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, 
         }
         delete current;
     }
+    //printf("TrailComp: %d\n", trailComp);
     return log(solComp) + trailComp;
 }
 
@@ -348,5 +355,5 @@ float bellotFun(Maze maze, std::tuple<int, int> startCoord, std::tuple<int, int>
         }
     }
     printf("NS walls: %d\n", nswalls);
-    return nswalls/mcclendonDiff(maze, startCoord, endCoord);
+    return nswalls/mcclendonDiff(&maze, startCoord, endCoord);
 }

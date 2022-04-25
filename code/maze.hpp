@@ -1,9 +1,11 @@
+#pragma once
 #include <stdlib.h>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <tuple>
-#include <ctime>
+#include <string>
 //#include <math.h>
 #include <cmath>
 #include <vector>
@@ -491,14 +493,11 @@ public:
     int length;//Vertical
     int width;//Horizontal
 
-    /*Traversal*/
-    float dirBias; //below 1/3 is left, 1/3 - 2/3 is straight, 2/3-3/3 is right
-    //interstection ratios
-    float ratio0, ratioU, ratioR, ratioD, ratioL, ratioUR, ratioUD, ratioUL,
-    ratioRD, ratioRL, ratioDR, ratioURD, ratioURL, ratioUDL, ratioRDL, ratio4;
-
-    /*Solution constraints*/
-    //int solLenRank;//0 is default solution tiles. 1 is longest solution, 2 is 2nd, etc.
+    Maze(){
+        length = 0;
+        width = 0;
+        corner = NULL;
+    }
 
     Maze(int len, int wid){//,int argc, char* argv){
         length = len;
@@ -525,6 +524,50 @@ public:
             left = NULL;
             up = row;
         }
+    }
+    // Maze(const char* fileName){
+    //     std::fstream mazeFile;
+    //     mazeFile.open(fileName, std::ios::in);
+    //     std::string line;
+    //     int len, wid;
+    //     len = wid = 0;
+    //     while(getline(mazeFile, line)){
+    //     }
+    //     mazeFile.close();
+    // }
+    ~Maze(){
+        //printf("start dealloc\n");
+        MazeNode* current, *old;
+        bool typewriter=true;
+        current = corner;
+        while(true){
+            while(true){
+                if(typewriter && current->neighbor(East)){
+                    old = current;
+                    current = current->neighbor(East);
+                    delete old;
+                }
+                else if(!typewriter && current->neighbor(West)){
+                    old = current;
+                    current = current->neighbor(West);
+                    delete old;
+                }
+                else{
+                    break;
+                }
+            }
+            typewriter=!typewriter;
+            if(current->neighbor(South)){
+                old = current;
+                delete old;
+                current = current->neighbor(South);
+            }
+            else{
+                delete current;
+                break;
+            }
+        }
+        //printf("end dealloc\n");
     }
 
     char* toString(){
@@ -608,10 +651,6 @@ public:
         joinSets(starts, setStarts, biases);
     }
 
-    void buildFromFile(){
-        
-    }
-
     MazeNode* getNode(std::tuple<int,int> coord){
         int row = std::get<0>(coord), col = std::get<1>(coord);
         if(row >= length || col >= width || row < 0 || col < 0){
@@ -646,6 +685,9 @@ public:
         if(rankRatio<0){
             return std::make_tuple(corner, getNode(std::make_tuple(length-1,width-1)));
         }
+        if(length == (width == 1)){
+            return std::make_tuple(corner, corner);
+        }
         int n = (2*(length-1)+2*(width-1))-1;
         int solRank = ((n*n+n)/2) * rankRatio;
         char digits[] = {'0','1','2','3','4','5','6','7','8','9'};
@@ -670,6 +712,7 @@ public:
         std::forward_list<solvNode*> treeTrav;
         //Build tree structure
         treeTrav.push_front(current);
+
         while(!treeTrav.empty()){
             current = treeTrav.front();
             treeTrav.pop_front();
@@ -689,6 +732,7 @@ public:
                 }
             }
         }
+
         //Calculate distance between all pairs of perimeter nodes
         for(i = 0; i<(2*(length-1)+2*(width-1)-1); i++){
             for(j=i+1; j<(2*(length-1)+2*(width-1)); j++){
@@ -731,6 +775,7 @@ public:
             std::pop_heap(solutionHeap.begin(), solutionHeap.end(), tupleComp);
             solutionHeap.pop_back();
         }
+
         return ans;
     }
 

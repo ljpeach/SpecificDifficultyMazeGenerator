@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ctime>
 #include "difficulty.hpp"
 
 int main(int argc, const char *argv[]){
@@ -23,11 +24,10 @@ int main(int argc, const char *argv[]){
     else{
         float solutionRankRatio = atof(argv[12]);
         std::tuple<MazeNode*, MazeNode*> entex = testMaze.solutionNodes(solutionRankRatio);
-        char* txt = testMaze.toString();
-        printf("%s",txt);
-        float mcd = mcclendonDiff(testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        float mcd = mcclendonDiff(&testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
         float bfun = bellotFun(testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
-        //txt = testMaze.toString();
-        printf("Difficulty: %f\nFunness: %f\n", mcd, bfun);
+        char* txt = testMaze.toString();
+        printf("%sDifficulty: %f\n",txt , mcd);
+        // printf("Difficulty: %f\nFunness: %f\n", mcd, bfun);
     }
 }

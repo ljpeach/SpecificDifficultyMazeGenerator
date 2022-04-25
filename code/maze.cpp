@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ctime>
 #include "maze.hpp"
 
 //g++ maze.cc -o testMaze;./testMaze

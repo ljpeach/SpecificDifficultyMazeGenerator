@@ -10,7 +10,7 @@ rawFile = open(sys.argv[1], 'r')
 fromFile = rawFile.read()
 rawFile.close()
 
-lines = fromFile.split('\n')[1:-1]
+lines = fromFile.split('\n')[0:-1]
 #print('\n'.join(lines))
 length = len(lines)
 width = len(lines[0])
