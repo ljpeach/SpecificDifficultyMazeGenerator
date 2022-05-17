@@ -536,7 +536,7 @@ public:
     //     mazeFile.close();
     // }
     ~Maze(){
-        //printf("start dealloc\n");
+        // std::cout<<"start dealloc\n";
         MazeNode* current, *old;
         bool typewriter=true;
         current = corner;
@@ -567,7 +567,7 @@ public:
                 break;
             }
         }
-        //printf("end dealloc\n");
+        // std::cout<<"end dealloc\n";
     }
 
     char* toString(){

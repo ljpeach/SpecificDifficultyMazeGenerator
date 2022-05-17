@@ -2,6 +2,7 @@
 #include <ctime>
 #include "maze.hpp"
 #include "difficulty.hpp"
+#include "agents.hpp"
 
 int main(int argc, const char* argv[]){
     //setup
@@ -15,7 +16,19 @@ int main(int argc, const char* argv[]){
     float biases[3];
     float solRank = 0;
     float avg = 0;
+    float mcclend;
+    float avgFun = 0;
     float temp = 0;
+    double avgTime = 0;
+    int avgExpandBfs = 0;
+    int avgGeneratedBfs = 0;
+    int avgExpandDfs = 0;
+    int avgGeneratedDfs = 0;
+    int avgExpandAstar = 0;
+    int avgGeneratedAstar = 0;
+    int avgExpandGreedy = 0;
+    int avgGeneratedGreedy = 0;
+    struct DiffOutput out;
 
     //tests
     printf("Start Coord Tests\n");
@@ -33,11 +46,50 @@ int main(int argc, const char* argv[]){
             overworked = new Maze(length, width);
             overworked->buildMaze(i+1, coords, mazeParam, biases);
             entex = overworked->solutionNodes(solRank);
-            avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+            mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+            avg += mcclend;
+            avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+            out = bfs(entex);
+            avgExpandBfs += out.nodeExpand;
+            avgGeneratedBfs += out.nodeGen;
+            out = dfs(entex);
+            avgExpandDfs += out.nodeExpand;
+            avgGeneratedDfs += out.nodeGen;
+            out = astar(entex);
+            avgExpandAstar += out.nodeExpand;
+            avgGeneratedAstar += out.nodeGen;
+            out = greedy(entex);
+            avgExpandGreedy += out.nodeExpand;
+            avgGeneratedGreedy += out.nodeGen;
         }
         avg/=1000;
-        printf("\tavgW/Coord%d: %f\n", i, avg);
+        avgFun/=1000;
+        avgExpandBfs/=1000;
+        avgGeneratedBfs/=1000;
+        avgExpandDfs/=1000;
+        avgGeneratedDfs/=1000;
+        avgExpandAstar/=1000;
+        avgGeneratedAstar/=1000;
+        avgExpandGreedy/=1000;
+        avgGeneratedGreedy/=1000;
+        printf("\tAverages with Coord set number %d:\n", i);
+        printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+        avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+        avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
+
+
         avg = 0;
+        avgFun = 0;
+        temp = 0;
+        avgTime = 0;
+        avgExpandBfs = 0;
+        avgGeneratedBfs = 0;
+        avgExpandDfs = 0;
+        avgGeneratedDfs = 0;
+        avgExpandAstar = 0;
+        avgGeneratedAstar = 0;
+        avgExpandGreedy = 0;
+        avgGeneratedGreedy = 0;
     }
     printf("\nStart Frontier Tests\n");
     mazeParam[0] = 0;
@@ -50,11 +102,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgRandom: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with Random Expansion Order:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     mazeParam[0] = 0;
     mazeParam[1] = 0.1;
@@ -66,11 +155,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavg BFS: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with BFS Expansion Order:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     mazeParam[0] = 0;
     mazeParam[1] = 0.1;
@@ -82,11 +208,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgDFS: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with DFS Expansion Order:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
 
     printf("\nStart Bias Tests\n");
@@ -103,11 +266,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgSharpTurnBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with Sharp Turn Bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     biases[0] = 0;
     biases[1] = 1;
@@ -116,11 +316,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgStraightBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with Straight Bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     biases[0] = 1;
     biases[1] = 0;
@@ -129,11 +366,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgTurnBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with Some Turn Bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     biases[0] = 1;
     biases[1] = 1;
@@ -142,11 +416,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgNoBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with No Turn Bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
 
     printf("\nStart Solution Tests\n");
@@ -158,11 +469,48 @@ int main(int argc, const char* argv[]){
             overworked = new Maze(length, width);
             overworked->buildMaze(1, coords, mazeParam, biases);
             entex = overworked->solutionNodes(solRank);
-            avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+            mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+            avg += mcclend;
+            avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+            out = bfs(entex);
+            avgExpandBfs += out.nodeExpand;
+            avgGeneratedBfs += out.nodeGen;
+            out = dfs(entex);
+            avgExpandDfs += out.nodeExpand;
+            avgGeneratedDfs += out.nodeGen;
+            out = astar(entex);
+            avgExpandAstar += out.nodeExpand;
+            avgGeneratedAstar += out.nodeGen;
+            out = greedy(entex);
+            avgExpandGreedy += out.nodeExpand;
+            avgGeneratedGreedy += out.nodeGen;
         }
         avg/=1000;
-        printf("\tavgSolRankPercent%f: %f\n", solRank, avg);
+        avgFun/=1000;
+        avgExpandBfs/=1000;
+        avgGeneratedBfs/=1000;
+        avgExpandDfs/=1000;
+        avgGeneratedDfs/=1000;
+        avgExpandAstar/=1000;
+        avgGeneratedAstar/=1000;
+        avgExpandGreedy/=1000;
+        avgGeneratedGreedy/=1000;
+        printf("\tAverages with Solution Rank Percentile %f:\n", solRank);
+        printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+        avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+        avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
         avg = 0;
+        avgFun = 0;
+        temp = 0;
+        avgTime = 0;
+        avgExpandBfs = 0;
+        avgGeneratedBfs = 0;
+        avgExpandDfs = 0;
+        avgGeneratedDfs = 0;
+        avgExpandAstar = 0;
+        avgGeneratedAstar = 0;
+        avgExpandGreedy = 0;
+        avgGeneratedGreedy = 0;
 
     }
     solRank = 0;
@@ -184,11 +532,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(2, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgCornerSeed+BFS+StrtBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with corner seeding, BFS, and straight bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     mazeParam[0] = 0;
     mazeParam[1] = 0.1;
@@ -203,11 +588,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(2, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgCornerSeed+DFS+leftBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with corner seeding, DFS, and left bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     mazeParam[0] = 0;
     mazeParam[1] = 0.1;
@@ -222,11 +644,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(2, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgCornerSeed+DFS+strtBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with corner seeding, DFS, and straight bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     coords[0] = coords[2];
     mazeParam[0] = 0;
@@ -242,11 +701,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+=  mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgCenterSeed+BFS+strtBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with center seeding, BFS, and straight bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     mazeParam[0] = 0;
     mazeParam[1] = 0.1;
@@ -261,11 +757,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+= mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgCenterSeed+BFS+rightBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with center seeding, BFS, and right bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     mazeParam[0] = 0;
     mazeParam[1] = 0.1;
@@ -280,11 +813,48 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+= mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgCenterSeed+DFS+rightBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with center seeding, DFS, and right bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
     mazeParam[0] = 0;
     mazeParam[1] = 0.1;
@@ -299,10 +869,47 @@ int main(int argc, const char* argv[]){
         overworked = new Maze(length, width);
         overworked->buildMaze(1, coords, mazeParam, biases);
         entex = overworked->solutionNodes(solRank);
-        avg+= mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        mcclend = mcclendonDiff(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate);
+        avg += mcclend;
+        avgFun += bellotFun(overworked, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcclend);
+        out = bfs(entex);
+        avgExpandBfs += out.nodeExpand;
+        avgGeneratedBfs += out.nodeGen;
+        out = dfs(entex);
+        avgExpandDfs += out.nodeExpand;
+        avgGeneratedDfs += out.nodeGen;
+        out = astar(entex);
+        avgExpandAstar += out.nodeExpand;
+        avgGeneratedAstar += out.nodeGen;
+        out = greedy(entex);
+        avgExpandGreedy += out.nodeExpand;
+        avgGeneratedGreedy += out.nodeGen;
     }
     avg/=1000;
-    printf("\tavgCenterSeed+DFS+strtBias: %f\n", avg);
+    avgFun/=1000;
+    avgExpandBfs/=1000;
+    avgGeneratedBfs/=1000;
+    avgExpandDfs/=1000;
+    avgGeneratedDfs/=1000;
+    avgExpandAstar/=1000;
+    avgGeneratedAstar/=1000;
+    avgExpandGreedy/=1000;
+    avgGeneratedGreedy/=1000;
+    printf("\tAverages with center seeding, DFS, and straight bias:\n");
+    printf("\t\tAvg McClendon: %f\n\t\tAvg Fun: %f\n\t\tAvg BFS Expanded: %d\n\t\tAvg BFS Generated: %d\n\t\tAvg DFS Expanded: %d\n\t\tAvg DFS Generated: %d\n\t\tAvg A* Expanded: %d\n\t\tAvg A* Generated: %d\n\t\tAvg Greedy Expanded: %d\n\t\tAvg Greedy Generated: %d\n",
+    avg, avgFun, avgExpandBfs, avgGeneratedBfs, avgExpandDfs, avgGeneratedDfs, avgExpandAstar,
+    avgGeneratedAstar, avgExpandGreedy, avgGeneratedGreedy);
     avg = 0;
+    avgFun = 0;
+    temp = 0;
+    avgTime = 0;
+    avgExpandBfs = 0;
+    avgGeneratedBfs = 0;
+    avgExpandDfs = 0;
+    avgGeneratedDfs = 0;
+    avgExpandAstar = 0;
+    avgGeneratedAstar = 0;
+    avgExpandGreedy = 0;
+    avgGeneratedGreedy = 0;
 
 }

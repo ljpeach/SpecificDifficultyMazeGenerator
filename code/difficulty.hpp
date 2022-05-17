@@ -1,3 +1,4 @@
+#pragma once
 #include <stdlib.h>
 #include <cstdio>
 #include <cstdlib>
@@ -39,6 +40,18 @@ public:
             }
         }
         return None;
+    }
+
+    int expand(){
+        int child = 0;
+        for(Direction dir = North; dir != None; dir++){
+            if(loc->hall(dir) && (parent == NULL ||
+            loc->neighbor(dir)->coordinate != parent->loc->coordinate)){
+                children[child] = new ExplrNode(this, loc->neighbor(dir));
+                child++;
+            }
+        }
+        return child;
     }
 };
 
