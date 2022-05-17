@@ -38,7 +38,15 @@ or
 - Examples assume the active directory is /SpecificDifficultyMazeGenerator.
 - All inputs other than length and width must be between 0 and 1.
 - Be mindful when typing inputs, as I currently do not have error detection for inputs.
+- mazeUI is a user friendly interface for running each program available.
+- mazeGen is the basic maze generation program.
+- mazeDifficulty generates a maze, with added difficulty analysis (McClendon and Bellot et al.)
+- mazeAgents generates a maze, with added difficulty analysis (DFS, BFS, A*, Greedy)
+- testSuite runs a series of tests, measuring maze difficulty using both difficulty models, and agent functions.
+- mazeVis is a tool used for converting mazes represented via text into more legible images.
 ```
+    python3 code/mazeUI.py
+
     binaries/mazeGen [length] [width] [old node push location low] [old node push location high] [new node push location low] [new node push location high] [pop location low] [pop location high] [left bias] [straight bias] [right bias] [solution length rank ratio. Leave empty for no start and end points]
 
     binaries/mazeDifficulty [length] [width] [old node push location low] [old node push location high] [new node push location low] [new node push location high] [pop location low] [pop location high] [left bias] [straight bias] [right bias] [solution length rank ratio. Leave empty for standard maze generation]
@@ -65,6 +73,4 @@ or
 - Difficulty Model:
     - Investigate alterations to models that account for super short solution path mazes (trivial adjacent start and end points)
 - Neural Network not set up
-- Agent functions for data analysis not written
-- Overarching UI not implemented
 - Implement exceptions

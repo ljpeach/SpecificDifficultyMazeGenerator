@@ -29,6 +29,6 @@ int main(int argc, const char *argv[]){
         float bfun2 = bellotFun(&testMaze, std::get<0>(entex)->coordinate, std::get<1>(entex)->coordinate, mcd);
         char* txt = testMaze.toString();
         // printf("%sDifficulty: %f\n",txt , mcd);
-        printf("%sDifficulty: %f\nFunness: %f/%f\n",txt, mcd, bfun1, bfun2);
+        printf("%sDifficulty: %f\nFunness: %f\n",txt, mcd, bfun1);
     }
 }

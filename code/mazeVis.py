@@ -1,16 +1,25 @@
 import sys
+import os
 from PIL import Image
 
 wall = (0,0,0) #black
 space = (255, 255, 255) #white
 special = (255,0,0)
+outFile = '../outs/maze.png'
 
-rawFile = open(sys.argv[1], 'r')
+if not os.isatty(0):
+    data = sys.stdin.read()
+    print(data)
+    lines = data.split('\n')[0:-1]
+    outFile = sys.argv[1]
+else:
+    rawFile = open(sys.argv[1], 'r')
 
-fromFile = rawFile.read()
-rawFile.close()
+    fromFile = rawFile.read()
+    rawFile.close()
+    lines = fromFile.split('\n')[0:-1]
+    outFile = sys.argv[2]
 
-lines = fromFile.split('\n')[0:-1]
 #print('\n'.join(lines))
 length = len(lines)
 width = len(lines[0])
@@ -29,4 +38,4 @@ for i in range(length):
             px[j, i] = space
         else:
             px[j, i] = special
-img.save(sys.argv[2],"PNG")
+img.save(outFile,"PNG")

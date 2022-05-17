@@ -28,7 +28,7 @@ int main(int argc, const char *argv[]){
         std::get<1>(entex)->display = '@';
         char* txt = testMaze.toString();
         // printf("%sDifficulty: %f\n",txt , mcd);
-        // printf("%s",txt);
+        printf("%s",txt);
         struct DiffOutput out;
         out = bfs(entex);
         printf("BFS performance:\n\tTime: %f\n\tNodes Expanded: %d\n\tNodes Generated: %d\n", out.duration, out.nodeExpand, out.nodeGen);
